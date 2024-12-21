@@ -2,20 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+.shadow-blink {
+  animation: shadow-blink 3s ease-in-out infinite;
 }
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@keyframes shadow-blink {
+  0% {
+    box-shadow: 0px 25px 30px -6px rgba(6, 50, 150, 0.3);
+  }
+  25% {
+    box-shadow: 0px 25px 30px -6px rgba(6, 50, 150, 0.5);
+  }
+  50% {
+    box-shadow: 0px 25px 30px -6px rgba(6, 50, 150, 0.7);
+  }
+  75% {
+    box-shadow: 0px 25px 30px -6px rgba(6, 50, 150, 0.5);
+  }
+  100% {
+    box-shadow: 0px 25px 30px -6px rgba(6, 50, 150, 0.3);
   }
 }
+@keyframes slideInFromTopLeft {
+  0% {
+    transform: translate(-100%, 0);
+  }
+  50% {
+    transform: translate(30px, 0);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+/* Menyembunyikan tulisan TOOLPAD di navbar admin saja */
+#admin-root .MuiAppBar-root .MuiTypography-root {
+  display: none;
+}
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+/* Mengganti tulisan TOOLPAD di navbar admin saja */
+#admin-root .MuiAppBar-root .MuiTypography-root::before {
+  content: "Nama Baru"; /* Ganti "Nama Baru" dengan nama yang diinginkan */
 }
