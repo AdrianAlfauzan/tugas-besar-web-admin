@@ -14,6 +14,7 @@ import { useDemoRouter } from "@toolpad/core/internal";
 
 import DashboardContent from "@/pages/admin/dashboard";
 import BerandaContent from "@/pages/admin/DaftarMahasiswa";
+import Profile from "@/pages/admin/Profile";
 import SalesContent from "@/pages/admin/reports/CekKelayakanTA";
 import TrafficContent from "@/pages/admin/reports/PelaksanaanSeminar";
 
@@ -57,8 +58,8 @@ const NAVIGATION: Navigation = [
     ],
   },
   {
-    segment: "integrations",
-    title: "Integrations",
+    segment: "Profile",
+    title: "Profile",
     icon: <LayersIcon />,
   },
 ];
@@ -85,6 +86,8 @@ function DemoPageContent({ pathname }: { pathname: string }) {
       return <DashboardContent />;
     case "/DaftarMahasiswa":
       return <BerandaContent />;
+    case "/Profile":
+      return <Profile />;
     case "/reports/CekKelayakanTA":
       return <SalesContent />; // Sales content view
     case "/reports/PelaksanaanSeminar":

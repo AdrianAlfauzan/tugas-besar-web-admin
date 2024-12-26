@@ -19,12 +19,12 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/", req.url)); // Ganti "/" dengan rute login Anda
   }
 
-  // Jika ada token, periksa role admin
+  // Jika ada token, periksa role Super Admin atau Admin
   if (token && adminRoutes.includes(pathname)) {
     const adminRole = token.role; // Asumsikan role disimpan dalam token (sesuaikan dengan struktur token Anda)
 
-    if (adminRole !== "admin") {
-      // Jika user bukan admin, arahkan ke halaman lain, misalnya halaman beranda
+    if (adminRole !== "Super Admin" && adminRole !== "Admin") {
+      // Jika user bukan Super  Admin atau Admin, arahkan ke halaman lain, misalnya halaman beranda
       return NextResponse.redirect(new URL("/", req.url)); // Ganti "/unauthorized" dengan halaman yang sesuai
     }
   }
