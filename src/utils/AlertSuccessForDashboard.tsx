@@ -4,7 +4,7 @@ import AlertTitle from "@mui/material/AlertTitle";
 import Stack from "@mui/material/Stack";
 import { motion } from "framer-motion";
 
-const AlertSuccess = ({ message }: { message: string }) => {
+const AlertSuccessForDashboard = ({ message }: { message: string }) => {
   return (
     <motion.div
       className="relative"
@@ -23,4 +23,4 @@ const AlertSuccess = ({ message }: { message: string }) => {
   );
 };
 
-export default AlertSuccess;
+export default AlertSuccessForDashboard;

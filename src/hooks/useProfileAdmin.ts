@@ -18,7 +18,6 @@ export const useProfileAdmin = () => {
 
   const [jabatanDosen, setJabatanDosen] = useState(formData.jabatanDosen);
   const [dosenPengajar, setDosenPengajar] = useState(formData.dosenPengajar);
-
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [alertType, setAlertType] = useState<"success" | "error" | null>(null);
 

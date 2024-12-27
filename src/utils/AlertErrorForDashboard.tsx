@@ -2,24 +2,25 @@ import React from "react";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Stack from "@mui/material/Stack";
+import { motion } from "framer-motion";
 
-const AlertError = ({ message }: { message: string }) => {
+const AlertErrorForDashboard = ({ message }: { message: string }) => {
   return (
-    <div className="fixed top-0 left-0 z-50">
-      <Stack
-        sx={{
-          width: "100%",
-          animation: "slideInFromTopLeft 0.8s ease-out",
-        }}
-        spacing={2}
-      >
+    <motion.div
+      className="relative"
+      initial={{ opacity: 0, x: 100 }} // Alert masuk dari kanan
+      animate={{ opacity: 1, x: 0 }} // Alert tampak di tempat semula
+      exit={{ opacity: 0, x: -100 }} // Alert keluar ke kiri
+      transition={{ duration: 0.5 }}
+    >
+      <Stack spacing={2}>
         <Alert severity="error">
           <AlertTitle>{message}</AlertTitle>
           Silahkan Memasukkan Data Dengan Benar!
         </Alert>
       </Stack>
-    </div>
+    </motion.div>
   );
 };
 
-export default AlertError;
+export default AlertErrorForDashboard;
