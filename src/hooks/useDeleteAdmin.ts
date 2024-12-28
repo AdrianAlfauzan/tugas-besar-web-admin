@@ -1,8 +1,14 @@
 import { useState } from "react";
-import { fetchAdmins, deleteAdmin } from "@/lib/firebase/service"; // Sesuaikan dengan import yang benar
+import { fetchAdmins, deleteAdmin } from "@/lib/firebase/service";
 
 interface UseDeleteAdminResult {
-  deleteAdminHandler: (selectedAdminId: string, selectedAdminRole: string, currentUserRole: string) => Promise<any>;
+  deleteAdminHandler: (
+    selectedAdminId: string,
+    selectedAdminRole: string,
+    selectedAdminNidn: string, // Tambah parameter NIDN admin yang akan dihapus
+    currentUserRole: string,
+    currentUserNidn: string // NIDN user yang sedang login
+  ) => Promise<any>;
   alertMessage: string | null;
   isSuccess: boolean | null;
 }
@@ -16,11 +22,25 @@ export const useDeleteAdmin = (): UseDeleteAdminResult => {
     setIsSuccess(null);
   };
 
-  const deleteAdminHandler = async (selectedAdminId: string, selectedAdminRole: string, currentUserRole: string): Promise<any> => {
+  const deleteAdminHandler = async (
+    selectedAdminId: string,
+    selectedAdminRole: string,
+    selectedAdminNidn: string, // NIDN admin yang akan dihapus
+    currentUserRole: string,
+    currentUserNidn: string // NIDN user yang sedang login
+  ): Promise<any> => {
+    // Mencegah penghapusan diri sendiri
+    if (selectedAdminNidn === currentUserNidn) {
+      setAlertMessage("Anda tidak dapat menghapus akun Anda sendiri.");
+      setIsSuccess(false);
+      setTimeout(clearAlert, 3000);
+      return;
+    }
+
     // Prevent deletion of the Super Admin by non-super admin
     if (selectedAdminRole === "Super Admin" && currentUserRole !== "Super Admin") {
-      setAlertMessage("You cannot delete the Super Admin.");
-      setIsSuccess(false); // Error message
+      setAlertMessage("Anda tidak dapat menghapus Super Admin.");
+      setIsSuccess(false);
       setTimeout(clearAlert, 3000);
       return;
     }
@@ -32,24 +52,24 @@ export const useDeleteAdmin = (): UseDeleteAdminResult => {
 
         if (response.success) {
           const updatedAdminData = await fetchAdmins();
-          setAlertMessage("Admin has been successfully deleted.");
-          setIsSuccess(true); // Success message
+          setAlertMessage("Admin berhasil dihapus.");
+          setIsSuccess(true);
           setTimeout(clearAlert, 3000);
-          return updatedAdminData; // Mengembalikan data admin yang diperbarui
+          return updatedAdminData;
         } else {
-          setAlertMessage(response.message || "An error occurred while deleting the admin.");
-          setIsSuccess(false); // Error message
+          setAlertMessage(response.message || "Terjadi kesalahan saat menghapus admin.");
+          setIsSuccess(false);
           setTimeout(clearAlert, 3000);
         }
       } catch (error) {
         console.error("Error deleting admin:", error);
-        setAlertMessage("An unexpected error occurred.");
+        setAlertMessage("Terjadi kesalahan yang tidak diharapkan.");
         setIsSuccess(false);
         setTimeout(clearAlert, 3000);
       }
     } else {
-      setAlertMessage("You do not have the necessary permissions to delete an admin.");
-      setIsSuccess(false); // Error message
+      setAlertMessage("Anda tidak memiliki izin yang diperlukan untuk menghapus admin.");
+      setIsSuccess(false);
       setTimeout(clearAlert, 3000);
     }
   };

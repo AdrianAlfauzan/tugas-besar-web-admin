@@ -16,7 +16,6 @@ const AddAdminDialog = ({ open, onClose, formData, setFormData }: any) => {
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState<boolean | null>(null);
 
-  // Pastikan session tersedia dan memiliki data pengguna
   const selectedRole = data?.user?.role; // Role pengguna yang sedang login
   console.log("Role pengguna saat ini:", selectedRole); // Menampilkan role pengguna saat ini
 
@@ -30,7 +29,6 @@ const AddAdminDialog = ({ open, onClose, formData, setFormData }: any) => {
   const handleSubmit = async () => {
     console.log("Form data role yang ingin ditambahkan:", formData.role); // Menampilkan role yang dipilih pada form
 
-    // Verifikasi bahwa admin biasa tidak bisa menambahkan Super Admin
     if (selectedRole === "Admin" && formData.role === "Super Admin") {
       setAlertMessage("Admin biasa tidak dapat menambahkan Super Admin");
       setIsSuccess(false);
@@ -38,7 +36,6 @@ const AddAdminDialog = ({ open, onClose, formData, setFormData }: any) => {
       return;
     }
 
-    // Verifikasi bahwa hanya Super Admin yang dapat menambahkan admin dengan role Super Admin
     if (formData.role === "Super Admin" && selectedRole !== "Super Admin") {
       setAlertMessage("Hanya Super Admin yang dapat menambahkan admin dengan role Super Admin");
       setIsSuccess(false);
@@ -87,7 +84,7 @@ const AddAdminDialog = ({ open, onClose, formData, setFormData }: any) => {
                 <MenuItem value="CYBER SECURITY">CYBER SECURITY</MenuItem>
               </Select>
             </FormControl>
-            {/* Dropdown for Jabatan Dosen */}
+
             <FormControl fullWidth margin="dense">
               <InputLabel id="jabatanDosen-label">Jabatan Dosen</InputLabel>
               <Select labelId="jabatanDosen-label" name="jabatanDosen" value={formData.jabatanDosen} onChange={handleChange} label="Jabatan Dosen">
@@ -97,7 +94,6 @@ const AddAdminDialog = ({ open, onClose, formData, setFormData }: any) => {
               </Select>
             </FormControl>
 
-            {/* Dropdown untuk Role */}
             <FormControl fullWidth margin="dense">
               <InputLabel id="role-label">Role</InputLabel>
               <Select labelId="role-label" name="role" value={formData.role} onChange={handleChange}>

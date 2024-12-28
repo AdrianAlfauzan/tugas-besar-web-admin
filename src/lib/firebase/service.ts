@@ -128,13 +128,12 @@ export async function addAdmin(
 
 export const fetchAdmins = async () => {
   try {
-    // Replace 'admins' with the actual name of your collection in Firestore
     const querySnapshot = await getDocs(collection(firestore, "admin"));
     const admins: any[] = [];
     querySnapshot.forEach((doc) => {
       admins.push({ id: doc.id, ...doc.data() });
     });
-    return admins; // Return the array of admin data
+    return admins;
   } catch (error) {
     console.error("Error fetching admins: ", error);
     return [];
