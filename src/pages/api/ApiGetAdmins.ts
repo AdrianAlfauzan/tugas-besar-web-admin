@@ -1,14 +1,16 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { fetchStudents } from "@/lib/firebase/service";
+import { fetchAdmins } from "@/lib/firebase/service";
 
-// Tipe untuk data student
-type studentData = {
+// Tipe untuk data admin
+type AdminData = {
   id: string;
   fullname: string;
-  jurusan: string;
-  nim: string;
-  password: string;
   role: string;
+  nidn: string;
+  email: string;
+  dosenPengajar: string;
+  jabatanDosen: string;
+  password: string;
   image: string;
 };
 
@@ -16,20 +18,20 @@ type studentData = {
 type ResponseData = {
   status: boolean;
   statusCode: number;
-  dataStudents: studentData[];
+  dataAdmins: AdminData[];
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   try {
     if (req.method === "GET") {
-      // Mengambil data student
-      const data = await fetchStudents();
+      // Mengambil data admin
+      const data = await fetchAdmins();
 
-      // Kirim response dengan data student
+      // Kirim response dengan data admin
       res.status(200).json({
         status: true,
         statusCode: 200,
-        dataStudents: data,
+        dataAdmins: data,
       });
     } else {
       // Metode selain GET tidak diizinkan
@@ -37,7 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       res.status(405).end(`Method ${req.method} Not Allowed`);
     }
   } catch (error) {
-    console.error("Failed to fetch student data:", error);
-    res.status(500).json({ status: false, statusCode: 500, dataStudents: [] });
+    console.error("Failed to fetch admin data:", error);
+    res.status(500).json({ status: false, statusCode: 500, dataAdmins: [] });
   }
 }

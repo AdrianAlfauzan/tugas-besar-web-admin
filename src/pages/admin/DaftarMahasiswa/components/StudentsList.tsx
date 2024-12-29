@@ -2,57 +2,57 @@ import React from "react";
 import { IconButton, Button } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Grid from "@mui/material/Grid2";
-interface AdminListProps {
-  adminData: any[]; // Use 'any[]' if you're not using a specific type
+interface StudentsListProps {
+  studentsData: any[]; // Use 'any[]' if you're not using a specific type
   currentItems: any[];
   currentPage: number;
   totalPages: number;
-  handleClickOpenDeleteDialog: (admin: any) => void;
+  handleClickOpenDeleteDialog: (student: any) => void;
   paginate: (page: number) => void;
 }
 
-const AdminList: React.FC<AdminListProps> = ({ adminData, currentItems, currentPage, totalPages, handleClickOpenDeleteDialog, paginate }) => {
+const studentList: React.FC<StudentsListProps> = ({ studentsData, currentItems, currentPage, totalPages, handleClickOpenDeleteDialog, paginate }) => {
   return (
     <div>
-      {/* Admin List Section */}
+      {/* student List Section */}
       <div className="overflow-x-auto bg-white rounded-lg shadow-lg">
         <Grid container spacing={0} className="border-b border-gray-200">
           <Grid size={2} className="py-4 bg-yellow-300 text-center font-semibold text-gray-700">
             NIDN
           </Grid>
           <Grid size={3} className="py-4 text-center font-semibold text-gray-700">
-            Nama Dosen
+            Nama Mahasiswa
           </Grid>
           <Grid size={2} className="py-4 text-center font-semibold text-gray-700">
-            Dosen Pengajar
+            Jurusan Mahasiswa
           </Grid>
           <Grid size={3} className="py-4 text-center font-semibold text-gray-700">
-            Jabatan Dosen
+            Email Mahasiswa
           </Grid>
           <Grid size={2} className="py-4 text-center font-semibold text-gray-700">
             Action
           </Grid>
         </Grid>
 
-        {adminData.length === 0 ? (
+        {studentsData.length === 0 ? (
           <div className="text-center py-6 text-gray-600">Tidak Ada data disini</div>
         ) : (
-          currentItems.map((admin) => (
-            <Grid key={admin.id} container className="border-b border-gray-100 hover:bg-gray-50">
+          currentItems.map((student) => (
+            <Grid key={student.id} container className="border-b border-gray-100 hover:bg-gray-50">
               <Grid size={2} className="py-4 text-center text-gray-800">
-                {admin.nidn}
+                {student.nim}
               </Grid>
               <Grid size={3} className="py-4 text-center text-gray-800">
-                {admin.fullname}
+                {student.fullname}
               </Grid>
               <Grid size={2} className="py-4 text-center text-gray-800">
-                {admin.dosenPengajar}
+                {student.jurusan}
               </Grid>
               <Grid size={3} className="py-4 text-center text-gray-800">
-                {admin.jabatanDosen}
+                {student.email}
               </Grid>
               <Grid size={2} className="py-4 text-center">
-                <IconButton className="text-red-600 hover:text-red-800" aria-label="delete" onClick={() => handleClickOpenDeleteDialog(admin)}>
+                <IconButton className="text-red-600 hover:text-red-800" aria-label="delete" onClick={() => handleClickOpenDeleteDialog(student)}>
                   <DeleteIcon color="error" />
                 </IconButton>
               </Grid>
@@ -77,4 +77,4 @@ const AdminList: React.FC<AdminListProps> = ({ adminData, currentItems, currentP
   );
 };
 
-export default AdminList;
+export default studentList;

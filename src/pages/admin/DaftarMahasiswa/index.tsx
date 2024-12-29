@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Grid from "@mui/material/Grid2";
 import Button from "@mui/material/Button";
 import Menu from "@mui/material/Menu";
@@ -13,71 +13,103 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import Slide from "@mui/material/Slide";
-import { TransitionProps } from "@mui/material/transitions";
-import IconButton from "@mui/material/IconButton";
-import DeleteIcon from "@mui/icons-material/Delete";
 import { useSession } from "next-auth/react";
+import StudentList from "@/pages/admin/DaftarMahasiswa/components/StudentsList";
 
-const Transition = React.forwardRef(function Transition(
-  props: TransitionProps & {
-    children: React.ReactElement<any, any>;
-  },
-  ref: React.Ref<unknown>
-) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
+// MY UTILS
+import AlertErrorForDashboard from "@/utils/AlertErrorForDashboard";
+import AlertSuccessForDashboard from "@/utils/AlertSuccessForDashboard";
 
 const AdminDaftarMahasiswaPage = () => {
-  const [openDialog, setOpenDialog] = React.useState(false);
-  const [selectedMahasiswa, setSelectedMahasiswa] = useState<any | null>(null);
+  const [studentsData, setStudentsData] = useState<any[]>([]); // State to hold student data
   const { data }: any = useSession();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+  const [position, setPosition] = useState("");
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false); // State for delete dialog
+  const [selectedStudent, setSelectedStudent] = useState<any>(null); // Store the student to delete
 
-  const handleClickOpenDialog = (mahasiswa: any) => {
-    setSelectedMahasiswa(mahasiswa);
-    setOpenDialog(true);
-  };
+  // States for alert
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  const [isSuccess, setIsSuccess] = useState<boolean | null>(null);
 
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-  };
-
-  const [position, setPosition] = React.useState("");
   const handleChange = (event: SelectChangeEvent) => {
     setPosition(event.target.value as string);
   };
 
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
+  useEffect(() => {
+    const fetchStudentsList = async () => {
+      try {
+        const response = await fetch("/api/ApiGetUsers");
+        const data = await response.json();
+        if (response.ok && data.status) {
+          setStudentsData(data.dataStudents);
+        }
+      } catch (error) {
+        console.error("Failed to fetch student data:", error);
+      }
+    };
 
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
+    fetchStudentsList();
+  }, []);
 
-  const mahasiswaData = [
-    { id: 1, nim: "1234545", name: "Adrian Kurniawan", jurusanMahasiswa: "Informatika" },
-    { id: 2, nim: "097823", name: "Adrian Musa Alfauzan", jurusanMahasiswa: "Informatika" },
-    { id: 3, nim: "2250081020", name: "Adrian Alfauzan", jurusanMahasiswa: "Informatika" },
-    { id: 4, nim: "2250081021", name: "Adrian Alfauzan", jurusanMahasiswa: "Informatika" },
-    { id: 5, nim: "2250081022", name: "Adrian Alfauzan", jurusanMahasiswa: "Informatika" },
-    { id: 6, nim: "2250081023", name: "Adrian Alfauzan", jurusanMahasiswa: "Informatika" },
-    { id: 7, nim: "2250081020", name: "Adrian Alfauzan", jurusanMahasiswa: "Informatika" },
-  ];
-
-  const handleDeleteMahasiswa = () => {
-    console.log("Deleting mahasiswa:", selectedMahasiswa);
-    setOpenDialog(false);
-  };
+  // Pagination
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = mahasiswaData.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(mahasiswaData.length / itemsPerPage);
+  const currentItems = studentsData.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(studentsData.length / itemsPerPage);
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
+  const handleClickOpenDeleteDialog = (student: any) => {
+    setSelectedStudent(student);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleClickCloseDeleteDialog = () => {
+    setOpenDeleteDialog(false);
+  };
+
+  const handleDeleteStudents = async () => {
+    if (!selectedStudent) return;
+
+    try {
+      const response = await fetch("/api/ApiDeleteStudent", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ studentId: selectedStudent.id }),
+      });
+
+      const data = await response.json();
+
+      if (data.status) {
+        setStudentsData(studentsData.filter((student) => student.id !== selectedStudent.id));
+        setOpenDeleteDialog(false);
+        setAlertMessage("Data berhasil dihapus.");
+        setIsSuccess(true);
+      } else {
+        setAlertMessage("Gagal menghapus data. Coba lagi.");
+        setIsSuccess(false);
+      }
+      setTimeout(() => {
+        setAlertMessage("");
+        setIsSuccess(false);
+      }, 3000);
+    } catch (error) {
+      console.error("Error deleting student:", error);
+      setAlertMessage("Terjadi kesalahan, coba lagi nanti.");
+      setIsSuccess(false);
+
+      setTimeout(() => {
+        setAlertMessage("");
+        setIsSuccess(false);
+      }, 3000);
+    }
+  };
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
-      {/* Header Section */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-semibold text-gray-800">Daftar Mahasiswa</h1>
         <h1 className="text-3xl font-semibold text-black">{data && data?.user?.fullname}</h1>
@@ -85,98 +117,51 @@ const AdminDaftarMahasiswaPage = () => {
           {/* Role Filter Dropdown */}
           <Box sx={{ minWidth: 180 }}>
             <FormControl fullWidth size="small">
-              <InputLabel id="select-position" className="font-medium">
-                Jabatan Dosen
+              <InputLabel id="select-position" className="font-medium ">
+                Jurusan Mahasiswa
               </InputLabel>
-              <Select labelId="select-position" id="select-position" value={position} label="Jabatan Dosen" onChange={handleChange}>
-                <MenuItem value="Dosen Pembimbing">Dosen Pembimbing</MenuItem>
-                <MenuItem value="Koordinator TA">Koordinator TA</MenuItem>
-                <MenuItem value="Dosen Penguji">Dosen Penguji</MenuItem>
+              <Select labelId="select-position" id="select-position" value={position} label="Jurusan Mahasiswa" onChange={handleChange}>
+                <MenuItem value="Jurusan Mahasiswa">Jurusan Mahasiswa</MenuItem>
               </Select>
             </FormControl>
           </Box>
         </div>
       </div>
 
-      {/* mahasiswa List Section */}
-      <div className="overflow-x-auto bg-white rounded-lg shadow-lg">
-        <Grid container spacing={0} className="border-b border-gray-200">
-          <Grid size={3} className="py-4 text-center font-semibold text-gray-700">
-            NIM
-          </Grid>
-          <Grid size={3} className="py-4 text-center font-semibold text-gray-700">
-            Nama Mahasiswa
-          </Grid>
-          <Grid size={3} className="py-4 text-center font-semibold text-gray-700">
-            Jurusan Mahasiswa
-          </Grid>
-          <Grid size={3} className="py-4 text-center font-semibold text-gray-700">
-            Action
-          </Grid>
-        </Grid>
-
-        {currentItems.map((mahasiswa) => (
-          <Grid key={mahasiswa.id} container className="border-b border-gray-100 hover:bg-gray-50">
-            <Grid size={3} className="py-4 text-center text-gray-800">
-              {mahasiswa.nim}
-            </Grid>
-            <Grid size={3} className="py-4 text-center text-gray-800">
-              {mahasiswa.name}
-            </Grid>
-            <Grid size={3} className="py-4 text-center text-gray-800">
-              {mahasiswa.jurusanMahasiswa}
-            </Grid>
-            <Grid size={3} className="py-4 text-center">
-              <IconButton className="text-red-600  hover:text-red-800" aria-label="delete" onClick={() => handleClickOpenDialog(mahasiswa)}>
-                <DeleteIcon color="error" />
-              </IconButton>
-            </Grid>
-          </Grid>
+      {/* Alert rendering */}
+      {alertMessage &&
+        isSuccess !== null &&
+        (isSuccess ? ( // luruskan
+          <AlertSuccessForDashboard message={alertMessage} />
+        ) : (
+          <AlertErrorForDashboard message={alertMessage} />
         ))}
-      </div>
-      {/* Pagination Controls */}
-      <div className="flex justify-center space-x-4 mt-6">
-        <Button onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1}>
-          Previous
-        </Button>
-        <span>
-          Page {currentPage} of {totalPages}
-        </span>
-        <Button onClick={() => paginate(currentPage + 1)} disabled={currentPage === totalPages}>
-          Next
-        </Button>
-      </div>
+
+      {/* Student List Section */}
+      <StudentList
+        studentsData={studentsData} // luruskan
+        currentItems={currentItems}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        handleClickOpenDeleteDialog={handleClickOpenDeleteDialog}
+        paginate={paginate}
+      />
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={openDialog} TransitionComponent={Transition} keepMounted onClose={handleCloseDialog} aria-describedby="alert-dialog-slide-description">
+      <Dialog open={openDeleteDialog} onClose={handleClickCloseDeleteDialog}>
         <DialogTitle>{"Apakah Anda Ingin Menghapus Data?"}</DialogTitle>
         <DialogContent>
-          <DialogContentText id="alert-dialog-slide-description">Data ini mungkin bersifat sensitif. Anda yakin akan menghapus data ini?</DialogContentText>
+          <DialogContentText>Data ini mungkin bersifat sensitif. Anda yakin akan menghapus data ini?</DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog} color="primary">
-            Disagree
+          <Button onClick={handleClickCloseDeleteDialog} color="primary">
+            Tidak
           </Button>
-          <Button onClick={handleDeleteMahasiswa} color="secondary">
-            Agree
+          <Button onClick={handleDeleteStudents} color="secondary">
+            Ya
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* mahasiswa Role Menu */}
-      <Menu
-        id="basic-menu"
-        anchorEl={anchorEl}
-        open={open}
-        onClose={handleClose}
-        MenuListProps={{
-          "aria-labelledby": "basic-button",
-        }}
-      >
-        <MenuItem onClick={handleClose}>Dosen Pembimbing</MenuItem>
-        <MenuItem onClick={handleClose}>Koordinator TA</MenuItem>
-        <MenuItem onClick={handleClose}>Dosen Penguji</MenuItem>
-      </Menu>
     </div>
   );
 };

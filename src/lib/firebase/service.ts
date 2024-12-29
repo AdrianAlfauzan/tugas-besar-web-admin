@@ -149,3 +149,28 @@ export async function deleteAdmin(adminId: string) {
     return { success: false, message: "Gagal menghapus admin." };
   }
 }
+
+export const fetchStudents = async () => {
+  try {
+    const querySnapshot = await getDocs(collection(firestore, "users"));
+    const students: any[] = [];
+    querySnapshot.forEach((doc) => {
+      students.push({ id: doc.id, ...doc.data() });
+    });
+    return students;
+  } catch (error) {
+    console.error("Error fetching students: ", error);
+    return [];
+  }
+};
+
+export async function deleteStudent(studentId: string) {
+  try {
+    // Delete the student document from the "users" collection
+    await deleteDoc(doc(firestore, "users", studentId));
+    return { success: true, message: "Student berhasil dihapus!" };
+  } catch (error) {
+    console.error("Error deleting student: ", error);
+    return { success: false, message: "Gagal menghapus student." };
+  }
+}
