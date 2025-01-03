@@ -12,8 +12,9 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
-import Slide from "@mui/material/Slide";
 import { useSession } from "next-auth/react";
+
+// MY COMPONENTS
 import StudentList from "@/pages/admin/DaftarMahasiswa/components/StudentsList";
 
 // MY UTILS
@@ -21,8 +22,8 @@ import AlertErrorForDashboard from "@/utils/AlertErrorForDashboard";
 import AlertSuccessForDashboard from "@/utils/AlertSuccessForDashboard";
 
 const AdminDaftarMahasiswaPage = () => {
-  const [studentsData, setStudentsData] = useState<any[]>([]); // State to hold student data
   const { data }: any = useSession();
+  const [studentsData, setStudentsData] = useState<any[]>([]); // State to hold student data
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const [position, setPosition] = useState("");
@@ -60,15 +61,14 @@ const AdminDaftarMahasiswaPage = () => {
   const totalPages = Math.ceil(studentsData.length / itemsPerPage);
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
+  // DELETE
   const handleClickOpenDeleteDialog = (student: any) => {
     setSelectedStudent(student);
     setOpenDeleteDialog(true);
   };
-
   const handleClickCloseDeleteDialog = () => {
     setOpenDeleteDialog(false);
   };
-
   const handleDeleteStudents = async () => {
     if (!selectedStudent) return;
 
