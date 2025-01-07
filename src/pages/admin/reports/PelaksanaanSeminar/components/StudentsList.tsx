@@ -2,6 +2,7 @@ import React from "react";
 import { IconButton, Button } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Grid from "@mui/material/Grid2";
+import EditIcon from "@mui/icons-material/Edit";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 
 interface StudentsListProps {
@@ -11,17 +12,18 @@ interface StudentsListProps {
   totalPages: number;
   handleClickOpenDeleteDialog: (student: any) => void;
   handleClickOpenViewDialog: (student: any) => void;
+  handleClickOpenViewDialogData: (student: any) => void;
   paginate: (page: number) => void;
 }
 
-const studentList: React.FC<StudentsListProps> = ({ studentsData, currentItems, currentPage, totalPages, handleClickOpenDeleteDialog, handleClickOpenViewDialog, paginate }) => {
+const studentList: React.FC<StudentsListProps> = ({ studentsData, currentItems, currentPage, totalPages, handleClickOpenDeleteDialog, handleClickOpenViewDialog, handleClickOpenViewDialogData, paginate }) => {
   return (
     <div>
       {/* student List Section */}
       <div className="overflow-x-auto bg-white rounded-lg shadow-lg">
         <Grid container spacing={0} className="border-b border-gray-200">
           <Grid size={2} className="py-4 bg-yellow-300 text-center font-semibold text-gray-700">
-            NIDN
+            NIM
           </Grid>
           <Grid size={3} className="py-4 text-center font-semibold text-gray-700">
             Nama Mahasiswa
@@ -58,11 +60,17 @@ const studentList: React.FC<StudentsListProps> = ({ studentsData, currentItems, 
                 <IconButton className="text-red-600 hover:text-red-800" aria-label="delete" onClick={() => handleClickOpenDeleteDialog(student)}>
                   <DeleteIcon color="error" />
                 </IconButton>
-                {/* Visibility Icon */}
                 <IconButton
                   className="text-blue-600 hover:text-blue-800"
                   aria-label="view"
                   onClick={() => handleClickOpenViewDialog(student)} // Call the visibility handler
+                >
+                  <EditIcon color="primary" />
+                </IconButton>
+                <IconButton
+                  className="text-blue-600 hover:text-blue-800"
+                  aria-label="view"
+                  onClick={() => handleClickOpenViewDialogData(student)} // Call the visibility handler
                 >
                   <VisibilityIcon color="primary" />
                 </IconButton>

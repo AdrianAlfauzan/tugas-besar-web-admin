@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import Button from "@mui/material/Button";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
@@ -12,12 +12,8 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
-import Slide from "@mui/material/Slide";
-import IconButton from "@mui/material/IconButton";
-import DeleteIcon from "@mui/icons-material/Delete";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
-import VisibilityIcon from "@mui/icons-material/Visibility";
 import { TextField, Typography } from "@mui/material";
 
 // MY COMPONENTS
@@ -27,34 +23,32 @@ import StudentList from "@/pages/admin/reports/PelaksanaanSeminar/components/Stu
 import AlertErrorForDashboard from "@/utils/AlertErrorForDashboard";
 import AlertSuccessForDashboard from "@/utils/AlertSuccessForDashboard";
 
+// MY HOOKS
+import useAddPelaksanaanSeminar from "@/hooks/useAddPelaksanaanSeminar";
+
 const AdminPelaksanaanSeminar = () => {
+  const { loading, error, success, addSeminar } = useAddPelaksanaanSeminar();
   const [studentsData, setStudentsData] = useState<any[]>([]); // State to hold student data
   const [selectedStudent, setSelectedStudent] = useState<any>(null); // Store the student to delete
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false); // State for delete dialog
-
   const [openViewDialog, setOpenViewDialog] = useState(false); // State for view dialog
-  const [studentDetails, setStudentDetails] = useState<any>(null); // Store the selected student details
+  const [openViewDialogData, setOpenViewDialogData] = useState(false); // State for view dialog
 
   // States for alert
+  const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState<boolean | null>(null);
-  const [openUploadModal, setOpenUploadModal] = useState(false); // Added state for second dialog
   const [years, setYears] = useState("");
   const { data }: any = useSession();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
   const handleClickOpenViewDialog = (student: any) => {
-    setStudentDetails(student); // Store the selected student details
+    setSelectedStudent(student); // Store the selected student details
     setOpenViewDialog(true); // Open the view dialog
   };
-
   const handleClickCloseViewDialog = () => {
     setOpenViewDialog(false); // Close the view dialog
-  };
-
-  const handleCloseUploadModal = () => {
-    setOpenUploadModal(false); // Close the upload modal
   };
 
   // Pagination
@@ -82,10 +76,6 @@ const AdminPelaksanaanSeminar = () => {
 
   const handleChange = (event: SelectChangeEvent) => {
     setYears(event.target.value as string);
-  };
-  const [activeTab, setActiveTab] = useState("announcements");
-  const handleTabChange = (tab: any) => {
-    setActiveTab(tab);
   };
 
   // DELETE
@@ -119,20 +109,77 @@ const AdminPelaksanaanSeminar = () => {
         setAlertMessage("Gagal menghapus data. Coba lagi.");
         setIsSuccess(false);
       }
-      setTimeout(() => {
-        setAlertMessage("");
-        setIsSuccess(false);
-      }, 3000);
     } catch (error) {
       console.error("Error deleting student:", error);
-      setAlertMessage("Terjadi kesalahan, coba lagi nanti.");
+      setAlertMessage("Terjadi kesalahan saat menghapus data. Coba lagi nanti.");
       setIsSuccess(false);
-
+    } finally {
       setTimeout(() => {
         setAlertMessage("");
         setIsSuccess(false);
       }, 3000);
     }
+  };
+
+  const [formData, setFormData] = useState({
+    namaPeserta: selectedStudent?.fullname || "",
+    nim: selectedStudent?.nim || "", // Add nim here
+    judulPengumuman: "",
+    deskripsiPengumuman: "",
+    tanggal: "",
+    waktu: "",
+    komentar: "",
+    nilai: 0,
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  useEffect(() => {
+    if (selectedStudent) {
+      setFormData((prevData) => ({
+        ...prevData,
+        namaPeserta: selectedStudent.fullname || "",
+        nim: selectedStudent.nim || "", // Update nim when selectedStudent changes
+      }));
+    }
+  }, [selectedStudent]);
+
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+    console.log("Data yang dikirim:", formData);
+
+    try {
+      setOpenViewDialog(false); // Tutup dialog
+      await addSeminar(formData); // Simpan data
+
+      setIsSuccess(true); // Set keberhasilan
+      setAlertMessage("Data Berhasil terkirim!"); // Set pesan sukses
+    } catch (error) {
+      console.error("Gagal submit form:", error);
+
+      setIsSuccess(false); // Set kegagalan
+      setAlertMessage("Terjadi kesalahan saat menyimpan data!"); // Set pesan error
+    } finally {
+      // Clear alert setelah beberapa detik
+      setTimeout(() => {
+        setAlertMessage(null);
+        setIsSuccess(null);
+      }, 3000); // 3 detik
+    }
+  };
+
+  const handleClickOpenViewDialogData = (student: any) => {
+    setSelectedStudent(student);
+    setOpenViewDialogData(true);
+  };
+  const handleClickCloseViewDialogData = () => {
+    setOpenViewDialogData(false);
   };
 
   return (
@@ -166,12 +213,13 @@ const AdminPelaksanaanSeminar = () => {
         ))}
 
       <StudentList
-        studentsData={studentsData} // luruskan
+        studentsData={studentsData}
         currentItems={currentItems}
         currentPage={currentPage}
         totalPages={totalPages}
         handleClickOpenDeleteDialog={handleClickOpenDeleteDialog}
         handleClickOpenViewDialog={handleClickOpenViewDialog}
+        handleClickOpenViewDialogData={handleClickOpenViewDialogData}
         paginate={paginate}
       />
 
@@ -201,76 +249,155 @@ const AdminPelaksanaanSeminar = () => {
             transition={{ duration: 0.3, type: "spring", stiffness: 100 }}
           >
             <Typography variant="h4" className="font-bold text-center text-gray-800 mb-6">
-              Kelola Seminar
+              Kelola Seminar - {selectedStudent?.fullname} - {selectedStudent?.nim}
             </Typography>
-            <Box className="flex flex-col md:flex-row gap-6">
-              {/* Sidebar */}
-              <Box className="w-full md:w-1/4 bg-gradient-to-b from-gray-800 to-gray-900 text-white p-4 rounded-lg space-y-4">
-                <Typography variant="h6" className="text-center">
-                  Menu
-                </Typography>
-                <Button onClick={() => handleTabChange("announcements")} fullWidth variant="outlined" className={`${activeTab === "announcements" ? "bg-gray-700" : "hover:bg-gray-700"}`}>
-                  Pengumuman
-                </Button>
-                <Button onClick={() => handleTabChange("schedules")} fullWidth variant="outlined" className={`${activeTab === "schedules" ? "bg-gray-700" : "hover:bg-gray-700"}`}>
-                  Jadwal
-                </Button>
-                <Button onClick={() => handleTabChange("evaluations")} fullWidth variant="outlined" className={`${activeTab === "evaluations" ? "bg-gray-700" : "hover:bg-gray-700"}`}>
-                  Nilai
-                </Button>
-              </Box>
-              {/* Content Area */}
-              <Box className="w-full md:w-3/4 bg-gray-100 p-6 rounded-lg shadow-md space-y-6">
-                {/* Pengumuman Section */}
-                {activeTab === "announcements" && (
-                  <motion.div className="p-4 bg-white shadow-md rounded-lg space-y-4" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-                    <Typography variant="h5" className="font-semibold">
-                      Manage Pengumuman
-                    </Typography>
-                    <TextField label="Judul Pengumuman" fullWidth variant="outlined" />
-                    <TextField label="Deskripsi Pengumuman" fullWidth variant="outlined" multiline rows={4} />
-                    <Button variant="contained" color="primary">
-                      Simpan Pengumuman
-                    </Button>
-                  </motion.div>
-                )}
-                {/* Jadwal Section */}
-                {activeTab === "schedules" && (
-                  <motion.div className="p-4 bg-white shadow-md rounded-lg space-y-4" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-                    <Typography variant="h5" className="font-semibold">
-                      Manage Jadwal
-                    </Typography>
-                    <TextField fullWidth variant="outlined" type="date" />
-                    <TextField fullWidth variant="outlined" type="time" />
-                    <Button variant="contained" color="primary">
-                      Simpan Jadwal
-                    </Button>
-                  </motion.div>
-                )}
-                {/* Nilai Section */}
-                {activeTab === "evaluations" && (
-                  <motion.div className="p-4 bg-white shadow-md rounded-lg space-y-4" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-                    <Typography variant="h5" className="font-semibold">
-                      Manage Nilai
-                    </Typography>
-                    <TextField label="Nama Peserta" fullWidth variant="outlined" />
-                    <TextField label="Nilai" fullWidth variant="outlined" />
-                    <TextField label="Komentar" fullWidth variant="outlined" multiline rows={4} />
-                    <Button variant="contained" color="primary">
-                      Simpan Nilai
-                    </Button>
-                  </motion.div>
-                )}
-              </Box>
-            </Box>
-            <div className="flex justify-between mt-6">
-              <Button color="secondary" variant="outlined" onClick={handleClickCloseViewDialog}>
-                Batal
-              </Button>
-              <Button color="primary" variant="contained">
-                Submit
-              </Button>
-            </div>
+            {/* Alert rendering */}
+            {alertMessage &&
+              isSuccess !== null &&
+              (isSuccess ? ( // luruskan
+                <AlertSuccessForDashboard message={alertMessage} />
+              ) : (
+                <AlertErrorForDashboard message={alertMessage} />
+              ))}
+
+            {/* Combined Form */}
+            <motion.div className="p-4 bg-white shadow-md rounded-lg space-y-4" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+              <Grid container spacing={2} className="space-y-4">
+                {/* Mahasiswa Section */}
+                <Grid item xs={12}>
+                  <Typography variant="h5" className="font-semibold">
+                    Mahasiswa
+                  </Typography>
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField label="Nama Peserta" value={formData.namaPeserta} fullWidth variant="outlined" disabled />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField label="NIM" value={selectedStudent?.nim || ""} fullWidth variant="outlined" disabled />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField label="Email" value={selectedStudent?.email || ""} fullWidth variant="outlined" disabled />
+                </Grid>
+              </Grid>
+
+              <Grid container spacing={2}>
+                {/* Row 1 */}
+                <Grid item xs={12} sm={6}>
+                  <TextField label="Judul Pengumuman" fullWidth variant="outlined" name="judulPengumuman" onChange={handleInputChange} />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField label="Deskripsi Pengumuman" fullWidth variant="outlined" multiline rows={1} name="deskripsiPengumuman" value={formData.deskripsiPengumuman} onChange={handleInputChange} />
+                </Grid>
+
+                {/* Row 2 */}
+                <Grid item xs={12} sm={6}>
+                  <TextField fullWidth variant="outlined" type="date" label="Tanggal Seminar" name="tanggal" value={formData.tanggal} onChange={handleInputChange} />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField fullWidth variant="outlined" type="time" label="Waktu Seminar" name="waktu" value={formData.waktu} onChange={handleInputChange} />
+                </Grid>
+
+                {/* Row 3 */}
+                <Grid item xs={12} sm={6}>
+                  <TextField label="Nilai" fullWidth variant="outlined" name="nilai" value={formData.nilai} onChange={handleInputChange} />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField label="Komentar" fullWidth variant="outlined" multiline rows={1} name="komentar" value={formData.komentar} onChange={handleInputChange} />
+                </Grid>
+
+                {/* Action Buttons */}
+                <Grid item xs={12} className="flex justify-between mt-6">
+                  <Button color="secondary" variant="outlined" onClick={handleClickCloseViewDialog}>
+                    Batal
+                  </Button>
+                  <Button color="primary" variant="contained" onClick={handleSubmit} disabled={loading}>
+                    {loading ? "Loading..." : "Submit"}
+                  </Button>
+                </Grid>
+              </Grid>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      </Dialog>
+
+      <Dialog open={openViewDialogData} onClose={handleClickCloseViewDialogData}>
+        <motion.div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+          <motion.div
+            className="relative bg-white rounded-lg shadow-xl p-6 w-11/12 md:w-3/4 lg:w-2/3 space-y-6"
+            initial={{ y: 50, scale: 0.95 }}
+            animate={{ y: 0, scale: 1 }}
+            exit={{ y: 50, scale: 0.95 }}
+            transition={{ duration: 0.3, type: "spring", stiffness: 100 }}
+          >
+            <Typography variant="h4" className="font-bold text-center text-gray-800 mb-6">
+              Hasil Data Kelola Seminar - {selectedStudent?.fullname} - {selectedStudent?.nim}
+            </Typography>
+
+            {/* Combined Form */}
+            <motion.div className="p-4 bg-white shadow-md rounded-lg space-y-4" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+              <Grid container spacing={2} className="space-y-4">
+                {/* Mahasiswa Section */}
+                <Grid item xs={12}>
+                  <Typography variant="h5" className="font-semibold">
+                    Mahasiswa
+                  </Typography>
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField label="Nama Peserta" value={formData.namaPeserta} fullWidth variant="outlined" disabled />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField label="NIM" value={selectedStudent?.nim || ""} fullWidth variant="outlined" disabled />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField label="Email" value={selectedStudent?.email || ""} fullWidth variant="outlined" disabled />
+                </Grid>
+              </Grid>
+
+              <Grid container spacing={2}>
+                {/* Row 1 */}
+                <Grid item xs={12} sm={6}>
+                  <TextField label="Judul Pengumuman" fullWidth variant="outlined" name="judulPengumuman" onChange={handleInputChange} disabled />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField label="Deskripsi Pengumuman" fullWidth variant="outlined" multiline rows={1} name="deskripsiPengumuman" value={formData.deskripsiPengumuman} onChange={handleInputChange} disabled />
+                </Grid>
+
+                {/* Row 2 */}
+                <Grid item xs={12} sm={6}>
+                  <TextField fullWidth variant="outlined" type="date" label="Tanggal Seminar" name="tanggal" value={formData.tanggal} onChange={handleInputChange} disabled />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField fullWidth variant="outlined" type="time" label="Waktu Seminar" name="waktu" value={formData.waktu} onChange={handleInputChange} disabled />
+                </Grid>
+
+                {/* Row 3 */}
+                <Grid item xs={12} sm={6}>
+                  <TextField label="Nilai" fullWidth variant="outlined" name="nilai" value={formData.nilai} onChange={handleInputChange} disabled />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField label="Komentar" fullWidth variant="outlined" multiline rows={1} name="komentar" value={formData.komentar} onChange={handleInputChange} disabled />
+                </Grid>
+
+                {/* Action Buttons */}
+                <Grid item xs={12} className="flex justify-between mt-6">
+                  <Button color="secondary" variant="outlined" onClick={handleClickCloseViewDialogData}>
+                    Batal
+                  </Button>
+                </Grid>
+              </Grid>
+            </motion.div>
           </motion.div>
         </motion.div>
       </Dialog>

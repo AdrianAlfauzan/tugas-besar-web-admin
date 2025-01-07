@@ -106,7 +106,13 @@ const ProfileAdminPage = () => {
                 <Grid size={6} className=" p-4 rounded ">
                   <FormControl fullWidth margin="dense" className="mb-4">
                     <InputLabel id="role-label">Role</InputLabel>
-                    <Select labelId="role-label" value={formData.role} onChange={handleChangeRole} label="Role">
+                    <Select
+                      labelId="role-label"
+                      value={formData.role}
+                      onChange={handleChangeRole}
+                      label="Role"
+                      disabled={formData.role === "Admin" || formData.role === "Super Admin"} // Disable jika role adalah Admin
+                    >
                       <MenuItem value="Admin">Admin</MenuItem>
                       <MenuItem value="Super Admin">Super Admin</MenuItem>
                     </Select>

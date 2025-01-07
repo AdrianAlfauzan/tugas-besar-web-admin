@@ -1,4 +1,4 @@
-import { collection, getDocs, where, query, getFirestore, updateDoc, doc, addDoc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, where, query, getFirestore, updateDoc, doc, addDoc, deleteDoc, getDoc, setDoc } from "firebase/firestore";
 import app from "@/lib/firebase/init";
 
 const firestore = getFirestore(app);
@@ -166,7 +166,6 @@ export const fetchStudents = async () => {
 
 export async function deleteStudent(studentId: string) {
   try {
-    // Delete the student document from the "users" collection
     await deleteDoc(doc(firestore, "users", studentId));
     return { success: true, message: "Student berhasil dihapus!" };
   } catch (error) {
@@ -174,3 +173,93 @@ export async function deleteStudent(studentId: string) {
     return { success: false, message: "Gagal menghapus student." };
   }
 }
+
+export const addPelaksanaanSeminar = async (data: {
+  nim: string; //
+  judulPengumuman: string;
+  deskripsiPengumuman: string;
+  tanggal: string;
+  waktu: string;
+  namaPeserta: string;
+  komentar: string;
+  nilai: number;
+}) => {
+  try {
+    const { nim, namaPeserta, nilai, komentar, ...restData } = data; // Memisahkan nilai, komentar, dan nim dari data lainnya
+
+    // Cek apakah dokumen dengan nim yang sesuai sudah ada
+    const docRef = doc(firestore, "pelaksanaanSeminar", nim);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      // Jika dokumen ada, update dokumen tersebut
+      await updateDoc(docRef, {
+        ...restData, // Menambahkan data lainnya tanpa perubahan
+        namaPeserta, // Menambahkan namaPeserta secara terpisah
+        nilai, // Menambahkan nilai secara terpisah
+        komentar, // Menambahkan komentar secara terpisah
+      });
+
+      return { success: true, id: nim, message: "Pelaksanaan seminar berhasil diperbarui!" };
+    } else {
+      // Jika dokumen belum ada, buat dokumen baru dengan nim sebagai id
+      await setDoc(docRef, {
+        ...restData, // Menambahkan data lainnya tanpa perubahan
+        namaPeserta, // Menambahkan namaPeserta secara terpisah
+        nilai, // Menambahkan nilai secara terpisah
+        komentar, // Menambahkan komentar secara terpisah
+      });
+
+      return { success: true, id: nim, message: "Pelaksanaan seminar berhasil ditambahkan!" };
+    }
+  } catch (error) {
+    console.error("Error menambahkan atau memperbarui pelaksanaan seminar:", error);
+    return { success: false, message: "Gagal menambahkan atau memperbarui pelaksanaan seminar." };
+  }
+};
+
+export const fetchSeminar = async () => {
+  try {
+    const querySnapshot = await getDocs(collection(firestore, "pelaksanaanSeminar"));
+    const seminar: any[] = [];
+    querySnapshot.forEach((doc) => {
+      seminar.push({ id: doc.id, ...doc.data() });
+    });
+    return seminar;
+  } catch (error) {
+    console.error("Error fetching seminar: ", error);
+    return [];
+  }
+};
+
+export const deleteSeminarByStudentId = async (nim: string): Promise<boolean> => {
+  try {
+    // Mengakses koleksi seminar
+    const seminarCollection = collection(firestore, "pelaksanaanSeminar");
+
+    // Membuat query untuk mencari seminar berdasarkan nim
+    const seminarQuery = query(seminarCollection, where("nim", "==", nim));
+
+    // Mendapatkan hasil query
+    const querySnapshot = await getDocs(seminarQuery);
+
+    if (querySnapshot.empty) {
+      console.log("Seminar data not found for nim:", nim);
+      return false; // Jika tidak ada seminar yang ditemukan
+    }
+
+    // Menghapus semua seminar yang ditemukan untuk nim
+    const deletePromises = querySnapshot.docs.map(async (docSnapshot) => {
+      const docRef = doc(firestore, "pelaksanaanSeminar", docSnapshot.id);
+      await deleteDoc(docRef); // Menghapus dokumen seminar berdasarkan ID
+    });
+
+    await Promise.all(deletePromises);
+
+    console.log("Seminar data successfully deleted for nim:", nim);
+    return true;
+  } catch (error) {
+    console.error("Error deleting seminar data:", error);
+    return false;
+  }
+};
